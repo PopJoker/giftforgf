@@ -396,7 +396,13 @@
                     let deadline = t.timestamp ? t.timestamp.toDate().getTime() + t.time * 60 * 60 * 1000 : Date.now();
                 
                     if (t.status === "待完成" || t.status === "待女友確認") {
-                        // 生成內容...
+                        div.innerHTML = `<p><strong>${t.task}</strong> (${t.points}點, ${t.time}小時)</p>
+                                         <p class="result">狀態: ${t.status}</p>
+                                         <p id="${timerElId}"></p>
+                                         ${t.status === "待完成" 
+                                             ? `<button onclick="completeTask('${t.id}', '${t.task}')">完成任務</button>` 
+                                             : `<span>等待女友確認</span>`}`;
+                        container.appendChild(div);
                         
                         const timerEl = document.getElementById(timerElId);
                         const timer = setInterval(async () => {
