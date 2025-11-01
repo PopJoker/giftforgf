@@ -291,12 +291,26 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-
+        
+            const webhookUrl = "https://discord.com/api/webhooks/1434221816150364170/cAveS2GI6w9uwXEm50EbcVgg9yHkwiGZ_VprgXmG-Kq2fPdk4uVv4IjxtGm5y6mdmMsF";
+        
+            async function sendDiscordNotification(message) {
+                try {
+                    await fetch(webhookUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content: message })
+                    });
+                } catch (err) {
+                    console.error("Discord通知失敗:", err);
+                }
+            }
+        
             let boyfriendTasks = [], punishments = [], girlPoints = 0;
             const loginPage = document.getElementById('login-page');
             const mainPage = document.getElementById('main-page');
             const girlPointsSpan = document.getElementById("girl-points");
-
+        
             // 登入
             document.getElementById('login-btn').addEventListener('click', () => {
                 const phone = document.getElementById('phone-input').value.trim();
@@ -310,31 +324,36 @@
                     alert("電話號碼錯誤");
                 }
             });
-
+        
             // 分頁切換
             window.showPage = (id) => {
                 document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
                 document.getElementById(id).classList.add('active');
             };
-
+        
             function initData() {
                 // 點數同步
                 db.collection("points").doc("girlPointsDoc").onSnapshot(doc => {
-                    if (doc.exists) { girlPoints = doc.data().girlPoints; girlPointsSpan.textContent = girlPoints; }
+                    if (doc.exists) { 
+                        girlPoints = doc.data().girlPoints; 
+                        girlPointsSpan.textContent = girlPoints; 
+                    }
                 });
-
+        
                 // 任務監聽
                 db.collection("tasks").onSnapshot(snapshot => {
-                    boyfriendTasks = []; snapshot.forEach(doc => boyfriendTasks.push({ ...doc.data(), id: doc.id }));
+                    boyfriendTasks = []; 
+                    snapshot.forEach(doc => boyfriendTasks.push({ ...doc.data(), id: doc.id }));
                     renderTaskList();
                 });
-
+        
                 // 懲罰監聽
                 db.collection("punishments").onSnapshot(snapshot => {
-                    punishments = []; snapshot.forEach(doc => punishments.push({ ...doc.data(), id: doc.id }));
+                    punishments = []; 
+                    snapshot.forEach(doc => punishments.push({ ...doc.data(), id: doc.id }));
                     renderPunishments();
                 });
-
+        
                 // 任務審核監聽
                 db.collection("publishedTasks").where("status", "==", "待女友確認")
                     .onSnapshot(snapshot => {
@@ -353,29 +372,32 @@
                         });
                     });
             }
-
+        
             function renderTaskList() {
                 const select = document.getElementById("task-list");
                 select.innerHTML = "";
                 boyfriendTasks.forEach((t, i) => {
-                    const opt = document.createElement("option"); opt.value = i; opt.textContent = t.name; select.appendChild(opt);
+                    const opt = document.createElement("option"); 
+                    opt.value = i; 
+                    opt.textContent = t.name; 
+                    select.appendChild(opt);
                 });
                 updateTimeLimit();
                 calculateConsumePoints();
             }
-
+        
             document.getElementById("task-list").addEventListener("change", () => {
-                updateTimeLimit(); calculateConsumePoints();
+                updateTimeLimit(); 
+                calculateConsumePoints();
             });
-
+        
             function updateTimeLimit() {
                 const idx = document.getElementById("task-list").value;
-                if (boyfriendTasks[idx]) document
                 if (boyfriendTasks[idx]) document.getElementById("time-limit").value = boyfriendTasks[idx].standardTime;
             }
-
+        
             document.getElementById("time-limit").addEventListener("input", calculateConsumePoints);
-
+        
             function calculateConsumePoints() {
                 const idx = document.getElementById("task-list").value;
                 const task = boyfriendTasks[idx];
@@ -386,9 +408,9 @@
                 document.getElementById("consume-points").textContent = consume;
                 return consume;
             }
-
+        
             // 發布任務
-            document.getElementById("publish-btn").addEventListener("click", () => {
+            document.getElementById("publish-btn").addEventListener("click", async () => {
                 const idx = document.getElementById("task-list").value;
                 const task = boyfriendTasks[idx];
                 if (!task) return;
@@ -396,10 +418,11 @@
                 const reward = document.getElementById("reward").value;
                 const consume = calculateConsumePoints();
                 if (consume > girlPoints) return alert("點數不足");
+        
                 girlPoints -= consume;
-                db.collection("points").doc("girlPointsDoc").set({ girlPoints });
+                await db.collection("points").doc("girlPointsDoc").set({ girlPoints });
                 const deadline = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + time * 60 * 60 * 1000));
-                db.collection("publishedTasks").add({
+                await db.collection("publishedTasks").add({
                     task: task.name,
                     time,
                     points: consume,
@@ -410,8 +433,11 @@
                 });
                 alert("任務發布成功！");
                 document.getElementById("reward").value = "";
+        
+                // Discord通知
+                await sendDiscordNotification(`發布任務: "${task.name}", 消耗點數: ${consume}, 獎勵: ${reward}, 完成時間: ${time} 小時`);
             });
-
+        
             // 懲罰管理
             function renderPunishments() {
                 const container = document.getElementById("punishment-list");
@@ -419,21 +445,25 @@
                 punishments.forEach((p) => {
                     const div = document.createElement("div");
                     div.className = "punishment-item";
-                    div.innerHTML = `<p>${p.text}</p><button onclick="deletePunishment('${p.id}')">刪除</button>`;
+                    div.innerHTML = `<p>${p.text}</p><button onclick="deletePunishment('${p.id}', '${p.text}')">刪除</button>`;
                     container.appendChild(div);
                 });
             }
-
-            document.getElementById("add-punishment").addEventListener("click", () => {
+        
+            document.getElementById("add-punishment").addEventListener("click", async () => {
                 const val = document.getElementById("new-punishment").value;
                 if (val && punishments.length < 20) {
-                    db.collection("punishments").add({ text: val });
+                    const docRef = await db.collection("punishments").add({ text: val });
                     document.getElementById("new-punishment").value = "";
+                    await sendDiscordNotification(`新增懲罰: "${val}"`);
                 } else alert("最多20個懲罰");
             });
-
-            window.deletePunishment = id => db.collection("punishments").doc(id).delete();
-
+        
+            window.deletePunishment = async (id, text) => {
+                await db.collection("punishments").doc(id).delete();
+                await sendDiscordNotification(`刪除懲罰: "${text}"`);
+            };
+        
             // 任務審核
             window.verifyTask = async (id, approve) => {
                 const ref = db.collection("publishedTasks").doc(id);
@@ -441,13 +471,14 @@
                 if (!doc.exists) return;
                 await ref.update({ status: approve ? "已完成" : "忽略" });
                 alert(approve ? "任務確認完成！" : "已忽略任務");
+                await sendDiscordNotification(`任務 "${doc.data().task}" 已被${approve ? '確認完成' : '忽略'}`);
             }
-
+        
             // 顏色設定
             const mainPicker = document.getElementById("main-color-picker");
             const cardPicker = document.getElementById("card-color-picker");
             const accentPicker = document.getElementById("accent-color-picker");
-
+        
             document.getElementById("save-colors-btn").addEventListener("click", () => {
                 const colors = {
                     main: mainPicker.value,
@@ -457,13 +488,13 @@
                 localStorage.setItem("lovelinkColors", JSON.stringify(colors));
                 applyColors(colors);
             });
-
+        
             function applyColors(colors) {
                 document.documentElement.style.setProperty('--main-color', colors.main);
                 document.documentElement.style.setProperty('--card-color', colors.card);
                 document.documentElement.style.setProperty('--accent-color', colors.accent);
             }
-
+        
             function loadColors() {
                 const colors = JSON.parse(localStorage.getItem("lovelinkColors") || '{}');
                 if (colors.main) mainPicker.value = colors.main;
@@ -472,7 +503,8 @@
                 applyColors(colors);
             }
         });
-    </script>
+        </script>
+
 </body>
 
 </html>
