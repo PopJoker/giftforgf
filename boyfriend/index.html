@@ -420,6 +420,19 @@
                 });
             }
 
+            window.completeTask = async (id) => {
+                try {
+                    // 將該任務狀態改為「待女友確認」
+                    await db.collection("publishedTasks").doc(id).update({
+                        status: "待女友確認"
+                    });
+                    alert("任務已完成，等待女友確認");
+                } catch (err) {
+                    console.error(err);
+                    alert("更新任務失敗");
+                }
+            };
+
             window.markAsDone = async id => {
                 if (!confirm("確定要刪除這個任務嗎？")) return;
                 await db.collection("publishedTasks").doc(id).delete();
