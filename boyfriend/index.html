@@ -385,32 +385,38 @@
             function renderTodo() {
                 const container = document.getElementById("todo-list");
                 container.innerHTML = "";
-        
+            
                 todoTasks.forEach(t => {
                     const div = document.createElement("div");
                     div.className = "todo-task";
                     div.id = `todo-${t.id}`;
-        
+            
                     const rewards = Array.isArray(t.reward) ? t.reward : [t.reward].filter(r => r);
                     const punishments = Array.isArray(t.result) ? t.result : [t.result].filter(r => r);
-        
+            
+                    const timerElId = `timer-${t.id}`;
+                    let deadline = t.timestamp ? t.timestamp.toDate().getTime() + t.time * 60 * 60 * 1000 : Date.now();
+            
                     if (t.status === "待完成" || t.status === "待女友確認") {
-                        const deadline = t.timestamp ? t.timestamp.toDate().getTime() + t.time * 60 * 60 * 1000 : Date.now();
                         div.innerHTML = `<p><strong>${t.task}</strong> (${t.points}點, ${t.time}小時)</p>
                                          <p>獎勵: ${rewards.join(', ')}</p>
                                          <p class="result">狀態: ${t.status}</p>
-                                         <p id="timer-${t.id}"></p>
+                                         <p id="${timerElId}"></p>
                                          ${t.status === "待完成" 
                                             ? `<button onclick="completeTask('${t.id}', '${t.task}')">完成任務</button>` 
                                             : `<span class="orange-text">等待女友確認</span>`}`;
-        
-                        const timerEl = document.getElementById(`timer-${t.id}`);
+            
+                        container.appendChild(div);
+            
+                        // 計時器
+                        const timerEl = document.getElementById(timerElId);
                         const timer = setInterval(async () => {
                             const now = Date.now();
                             const diff = deadline - now;
-        
+            
                             if (diff <= 0 && t.status === "待完成") {
                                 clearInterval(timer);
+                                // 隨機懲罰
                                 const punishSnap = await db.collection("punishments").get();
                                 let randomPunishment = "";
                                 if (!punishSnap.empty) {
@@ -431,17 +437,19 @@
                                 timerEl.textContent = `剩餘時間：${h}時 ${m}分 ${s}秒`;
                             }
                         }, 1000);
-                        div.timer = timer;
+            
+                        div.timer = timer; // 儲存計時器方便日後清除
                     } else {
+                        // 已完成/已逾時任務
                         div.innerHTML = `<p><strong>${t.task}</strong></p>
                                          <p>獎勵: ${rewards.join(', ')}</p>
                                          <p>懲罰: ${punishments.join(', ')}</p>
                                          <button onclick="markAsDone('${t.id}', '${t.task}')">✅ 兌換/清除</button>`;
+                        container.appendChild(div);
                     }
-        
-                    container.appendChild(div);
                 });
             }
+
         
             window.completeTask = async (id, taskName) => {
                 try {
