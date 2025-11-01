@@ -1,0 +1,96 @@
+/* 全局樣式 */
+body {
+    margin: 0;
+    font-family: 'Quicksand', sans-serif;
+    background-color: #FFF5F7;
+    color: #FF7EB3;
+    padding-bottom: 60px;
+    /* 預留下方 menu 空間 */
+}
+
+header {
+    padding: 20px;
+    text-align: center;
+    background-color: #FFD3E0;
+    border-bottom: 2px solid #FF7EB3;
+    border-radius: 0 0 15px 15px;
+}
+
+h1 {
+    margin: 0;
+}
+
+main {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+}
+
+section {
+    background-color: #FFE4F0;
+    border: 1px solid #FF7EB3;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 600px;
+    margin-bottom: 20px;
+    padding: 15px;
+    box-shadow: 2px 2px 10px rgba(255, 126, 179, 0.3);
+    display: none;
+    /* 分頁初始隱藏 */
+}
+
+h2 {
+    border-bottom: 1px solid #FF7EB3;
+    padding-bottom: 5px;
+}
+
+button {
+    background-color: #FF7EB3;
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #FF5CA3;
+}
+
+input,
+select {
+    padding: 8px;
+    margin: 5px 0;
+    border-radius: 10px;
+    border: 1px solid #FF7EB3;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* 下方 menu */
+#bottom-menu {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #FF7EB3;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+
+#bottom-menu button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#bottom-menu button:hover {
+    color: #FFF5F7;
+}

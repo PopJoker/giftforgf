@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>妤慈公主專屬系統</title>
+    <style>
+        :root {
+            --main-color: #FFD3E0;
+            --card-color: #FFE4F0;
+            --accent-color: #FF7EB3;
+        }
+
+        html {
+            font-size: clamp(14px, 1.5vw, 18px);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Quicksand', sans-serif;
+            background-color: #FFF5F7;
+            color: var(--accent-color);
+            min-height: 100vh;
+
+            /* 單一卡片置中 */
+            /* display: flex;
+            justify-content: center;
+            align-items: center; */
+        }
+
+
+        /* 登入頁單獨置中 */
+        #login-page.active {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        /* 登入卡片 */
+        #login-page {
+            background-color: var(--card-color);
+            padding: clamp(1rem, 5vw, 2rem);
+            border-radius: 15px;
+            box-shadow: 2px 2px 15px rgba(255, 126, 179, 0.3);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        #login-page h1 {
+            font-size: clamp(1.6rem, 5vw, 2rem);
+            margin-bottom: clamp(1rem, 3vw, 1.5rem);
+        }
+
+        #login-page input,
+        #login-page button {
+            width: 80%;
+            max-width: 300px;
+            font-size: clamp(0.9rem, 2vw, 1.2rem);
+            margin-bottom: clamp(0.6rem, 2vw, 0.8rem);
+            padding: clamp(0.5rem, 1.5vw, 0.8rem);
+        }
+
+        /* 隱藏後 main-page 使用正常流排版 */
+        #main-page {
+            display: none;
+            /* 登入後才顯示 */
+            width: 100%;
+        }
+
+        header {
+            margin: 0;
+            padding: clamp(0.8rem, 2vw, 1.5rem);
+            text-align: center;
+            background-color: var(--main-color);
+            border-bottom: 2px solid var(--accent-color);
+            border-radius: 0 0 15px 15px;
+            color: white;
+            font-size: clamp(1.2rem, 2.5vw, 2rem);
+            position: relative;
+            transition: background-color 0.3s;
+        }
+
+        #points-display {
+            position: absolute;
+            right: clamp(0.5rem, 2vw, 1rem);
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+            font-size: clamp(0.8rem, 1.5vw, 1.2rem);
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: clamp(1rem, 3vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        section {
+            background-color: var(--card-color);
+            border: 1px solid var(--accent-color);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: clamp(0.8rem, 2vw, 1.5rem);
+            padding: clamp(0.8rem, 2vw, 1.5rem);
+            box-shadow: 2px 2px 10px rgba(255, 126, 179, 0.3);
+            display: none;
+            box-sizing: border-box;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        }
+
+        section.active {
+            display: block;
+        }
+
+        h1,
+        h2 {
+            margin: 0 0 clamp(0.5rem, 1vw, 1rem) 0;
+        }
+
+        button {
+            background-color: var(--accent-color);
+            border: none;
+            color: white;
+            padding: clamp(0.5rem, 1.5vw, 0.8rem) clamp(1rem, 3vw, 1.2rem);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        }
+
+        button:hover {
+            background-color: #FF5CA3;
+            transform: scale(1.05);
+        }
+
+        input,
+        select {
+            padding: clamp(0.4rem, 1.5vw, 0.6rem);
+            margin: clamp(0.3rem, 1vw, 0.5rem) 0;
+            border-radius: 10px;
+            border: 1px solid var(--accent-color);
+            width: 100%;
+            box-sizing: border-box;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        }
+
+        .task-item,
+        .punishment-item {
+            background-color: var(--card-color);
+            margin-bottom: clamp(0.6rem, 2vw, 0.8rem);
+            padding: clamp(0.6rem, 2vw, 0.8rem);
+            border-radius: 15px;
+            box-shadow: 2px 2px 10px rgba(255, 126, 179, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .task-item:hover,
+        .punishment-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 4px 4px 15px rgba(255, 126, 179, 0.3);
+        }
+
+        #bottom-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--accent-color);
+            display: flex;
+            justify-content: space-around;
+            padding: clamp(0.4rem, 1.5vw, 0.8rem) 0;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+        }
+
+        #bottom-menu button {
+            background: none;
+            border: none;
+            color: white;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+            cursor: pointer;
+        }
+
+        #bottom-menu button:hover {
+            color: #FFF5F7;
+        }
+
+        .color-picker {
+            margin-bottom: clamp(0.6rem, 2vw, 0.8rem);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 登入卡片 -->
+    <div id="login-page" class="active">
+        <h1>妤慈公主請登入</h1>
+        <label>請輸入電話號碼</label>
+        <input type="text" id="phone-input" placeholder="輸入電話號碼">
+        <button id="login-btn">登入</button>
+    </div>
+
+    <!-- 主頁 -->
+    <div id="main-page" style="display:none; width:100%;">
+        <header>
+            妤慈公主奴才管理系統
+            <span id="points-display">剩餘點數: <strong id="girl-points">0</strong></span>
+        </header>
+        <main>
+            <!-- 發布任務 -->
+            <section id="publish-page">
+                <h2>發布任務</h2>
+                <label>選擇任務</label>
+                <select id="task-list"></select>
+                <label>時間限制 (小時)</label>
+                <input type="number" id="time-limit" placeholder="輸入任務完成時間">
+                <label>獎勵</label>
+                <input type="text" id="reward" placeholder="輸入任務獎勵">
+                <div>消耗點數: <span id="consume-points">0</span></div>
+                <button id="publish-btn">發布任務</button>
+            </section>
+
+            <!-- 任務審核 -->
+            <section id="verify-page">
+                <h2>任務審核</h2>
+                <div id="verify-list"></div>
+            </section>
+
+            <!-- 懲罰管理 -->
+            <section id="punishment-page">
+                <h2>懲罰管理</h2>
+                <input type="text" id="new-punishment" placeholder="輸入懲罰內容">
+                <button id="add-punishment">新增懲罰</button>
+                <div id="punishment-list"></div>
+            </section>
+
+            <!-- 設定配色 -->
+            <section id="settings-page">
+                <h2>介面設定</h2>
+                <div class="color-picker">
+                    <label>主色</label>
+                    <input type="color" id="main-color-picker" value="#FFD3E0">
+                </div>
+                <div class="color-picker">
+                    <label>卡片色</label>
+                    <input type="color" id="card-color-picker" value="#FFE4F0">
+                </div>
+                <div class="color-picker">
+                    <label>強調色</label>
+                    <input type="color" id="accent-color-picker" value="#FF7EB3">
+                </div>
+                <button id="save-colors-btn">儲存顏色</button>
+            </section>
+        </main>
+
+        <div id="bottom-menu">
+            <button onclick="showPage('publish-page')">發布任務</button>
+            <button onclick="showPage('verify-page')">任務審核</button>
+            <button onclick="showPage('punishment-page')">懲罰管理</button>
+            <button onclick="showPage('settings-page')">設定</button>
+        </div>
+    </div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDn_JnNIbBx-FMAi02puLmxStoTo4XLODo",
+                authDomain: "gift-e879d.firebaseapp.com",
+                projectId: "gift-e879d",
+                storageBucket: "gift-e879d.firebasestorage.app",
+                messagingSenderId: "747195743787",
+                appId: "1:747195743787:web:e0e41f88384fe9e7bdf46e"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+
+            let boyfriendTasks = [], punishments = [], girlPoints = 0;
+            const loginPage = document.getElementById('login-page');
+            const mainPage = document.getElementById('main-page');
+            const girlPointsSpan = document.getElementById("girl-points");
+
+            // 登入
+            document.getElementById('login-btn').addEventListener('click', () => {
+                const phone = document.getElementById('phone-input').value.trim();
+                if (phone === "0906832528") {
+                    loginPage.style.display = "none";
+                    mainPage.style.display = "block";
+                    initData();
+                    loadColors();
+                    showPage('publish-page');
+                } else {
+                    alert("電話號碼錯誤");
+                }
+            });
+
+            // 分頁切換
+            window.showPage = (id) => {
+                document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+            };
+
+            function initData() {
+                // 點數同步
+                db.collection("points").doc("girlPointsDoc").onSnapshot(doc => {
+                    if (doc.exists) { girlPoints = doc.data().girlPoints; girlPointsSpan.textContent = girlPoints; }
+                });
+
+                // 任務監聽
+                db.collection("tasks").onSnapshot(snapshot => {
+                    boyfriendTasks = []; snapshot.forEach(doc => boyfriendTasks.push({ ...doc.data(), id: doc.id }));
+                    renderTaskList();
+                });
+
+                // 懲罰監聽
+                db.collection("punishments").onSnapshot(snapshot => {
+                    punishments = []; snapshot.forEach(doc => punishments.push({ ...doc.data(), id: doc.id }));
+                    renderPunishments();
+                });
+
+                // 任務審核監聽
+                db.collection("publishedTasks").where("status", "==", "待女友確認")
+                    .onSnapshot(snapshot => {
+                        const list = document.getElementById("verify-list");
+                        list.innerHTML = "";
+                        snapshot.forEach(doc => {
+                            const data = doc.data();
+                            const div = document.createElement("div");
+                            div.className = "task-item";
+                            div.innerHTML = `
+                                <p><strong>${data.task}</strong> (${data.points}點)</p>
+                                <p>獎勵: ${data.reward}</p>
+                                <button onclick="verifyTask('${doc.id}', true)">確認完成</button>
+                                <button onclick="verifyTask('${doc.id}', false)">忽略</button>`;
+                            list.appendChild(div);
+                        });
+                    });
+            }
+
+            function renderTaskList() {
+                const select = document.getElementById("task-list");
+                select.innerHTML = "";
+                boyfriendTasks.forEach((t, i) => {
+                    const opt = document.createElement("option"); opt.value = i; opt.textContent = t.name; select.appendChild(opt);
+                });
+                updateTimeLimit();
+                calculateConsumePoints();
+            }
+
+            document.getElementById("task-list").addEventListener("change", () => {
+                updateTimeLimit(); calculateConsumePoints();
+            });
+
+            function updateTimeLimit() {
+                const idx = document.getElementById("task-list").value;
+                if (boyfriendTasks[idx]) document
+                if (boyfriendTasks[idx]) document.getElementById("time-limit").value = boyfriendTasks[idx].standardTime;
+            }
+
+            document.getElementById("time-limit").addEventListener("input", calculateConsumePoints);
+
+            function calculateConsumePoints() {
+                const idx = document.getElementById("task-list").value;
+                const task = boyfriendTasks[idx];
+                if (!task) return 0;
+                let userTime = Number(document.getElementById("time-limit").value);
+                if (!userTime || userTime <= 0) userTime = task.standardTime;
+                const consume = Math.ceil(task.basePoints * (task.standardTime / userTime));
+                document.getElementById("consume-points").textContent = consume;
+                return consume;
+            }
+
+            // 發布任務
+            document.getElementById("publish-btn").addEventListener("click", () => {
+                const idx = document.getElementById("task-list").value;
+                const task = boyfriendTasks[idx];
+                if (!task) return;
+                const time = Number(document.getElementById("time-limit").value) || task.standardTime;
+                const reward = document.getElementById("reward").value;
+                const consume = calculateConsumePoints();
+                if (consume > girlPoints) return alert("點數不足");
+                girlPoints -= consume;
+                db.collection("points").doc("girlPointsDoc").set({ girlPoints });
+                const deadline = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + time * 60 * 60 * 1000));
+                db.collection("publishedTasks").add({
+                    task: task.name,
+                    time,
+                    points: consume,
+                    reward,
+                    status: "待完成",
+                    deadline,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("任務發布成功！");
+                document.getElementById("reward").value = "";
+            });
+
+            // 懲罰管理
+            function renderPunishments() {
+                const container = document.getElementById("punishment-list");
+                container.innerHTML = "";
+                punishments.forEach((p) => {
+                    const div = document.createElement("div");
+                    div.className = "punishment-item";
+                    div.innerHTML = `<p>${p.text}</p><button onclick="deletePunishment('${p.id}')">刪除</button>`;
+                    container.appendChild(div);
+                });
+            }
+
+            document.getElementById("add-punishment").addEventListener("click", () => {
+                const val = document.getElementById("new-punishment").value;
+                if (val && punishments.length < 20) {
+                    db.collection("punishments").add({ text: val });
+                    document.getElementById("new-punishment").value = "";
+                } else alert("最多20個懲罰");
+            });
+
+            window.deletePunishment = id => db.collection("punishments").doc(id).delete();
+
+            // 任務審核
+            window.verifyTask = async (id, approve) => {
+                const ref = db.collection("publishedTasks").doc(id);
+                const doc = await ref.get();
+                if (!doc.exists) return;
+                await ref.update({ status: approve ? "已完成" : "忽略" });
+                alert(approve ? "任務確認完成！" : "已忽略任務");
+            }
+
+            // 顏色設定
+            const mainPicker = document.getElementById("main-color-picker");
+            const cardPicker = document.getElementById("card-color-picker");
+            const accentPicker = document.getElementById("accent-color-picker");
+
+            document.getElementById("save-colors-btn").addEventListener("click", () => {
+                const colors = {
+                    main: mainPicker.value,
+                    card: cardPicker.value,
+                    accent: accentPicker.value
+                };
+                localStorage.setItem("lovelinkColors", JSON.stringify(colors));
+                applyColors(colors);
+            });
+
+            function applyColors(colors) {
+                document.documentElement.style.setProperty('--main-color', colors.main);
+                document.documentElement.style.setProperty('--card-color', colors.card);
+                document.documentElement.style.setProperty('--accent-color', colors.accent);
+            }
+
+            function loadColors() {
+                const colors = JSON.parse(localStorage.getItem("lovelinkColors") || '{}');
+                if (colors.main) mainPicker.value = colors.main;
+                if (colors.card) cardPicker.value = colors.card;
+                if (colors.accent) accentPicker.value = colors.accent;
+                applyColors(colors);
+            }
+        });
+    </script>
+</body>
+
+</html>

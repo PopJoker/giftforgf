@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>品延大帥哥系統</title>
+    <style>
+        :root {
+            --main-color: #E0F7FA;
+            --card-color: #B2EBF2;
+            --accent-color: #006064;
+            --highlight-color: #FFD700;
+            --button-hover: #004D40;
+        }
+
+        html {
+            font-size: clamp(14px, 1.5vw, 18px);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--main-color);
+            color: var(--accent-color);
+            min-height: 100vh;
+        }
+
+        /* 登入頁 */
+        #login-page {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: var(--card-color);
+            padding: clamp(1.5rem, 4vw, 2.5rem);
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #login-page input,
+        #login-page button {
+            width: 80%;
+            max-width: 300px;
+            padding: clamp(0.6rem, 1.5vw, 1rem);
+            margin-bottom: clamp(0.6rem, 2vw, 1rem);
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+            border-radius: 12px;
+            border: 1px solid var(--accent-color);
+            box-sizing: border-box;
+        }
+
+        /* 主頁 */
+        #main-page {
+            display: none;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            position: sticky;
+            /* 讓 header 隨頁面滾動固定 */
+            top: 0;
+            padding: clamp(0.8rem, 2vw, 1.5rem);
+            text-align: center;
+            background-color: var(--main-color);
+            /* 固定底色 */
+            border-bottom: 2px solid var(--accent-color);
+            font-size: clamp(1.2rem, 2.5vw, 2rem);
+            font-weight: bold;
+            z-index: 1000;
+            /* 確保 header 在最上層 */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            /* 輕微陰影 */
+        }
+
+        #points-display {
+            position: absolute;
+            right: clamp(0.5rem, 2vw, 1rem);
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: bold;
+        }
+
+        main {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: clamp(1rem, 3vw, 2rem);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        section {
+            display: none;
+            background-color: var(--card-color);
+            border-radius: 20px;
+            padding: clamp(1rem, 2vw, 1.5rem);
+            width: 90%;
+            max-width: 600px;
+            margin-bottom: clamp(1rem, 2vw, 1.5rem);
+            box-shadow: 0 6px 20px rgba(0, 96, 100, 0.2);
+            box-sizing: border-box;
+            transition: transform 0.2s;
+        }
+
+        section.active {
+            display: block;
+            transform: translateY(0);
+        }
+
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: clamp(0.5rem, 1.5vw, 0.8rem) clamp(1rem, 3vw, 1.2rem);
+            cursor: pointer;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+            margin-top: 5px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--button-hover);
+            transform: scale(1.05);
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: clamp(0.4rem, 1.5vw, 0.6rem);
+            margin: clamp(0.3rem, 1vw, 0.5rem) 0;
+            border-radius: 12px;
+            border: 1px solid var(--accent-color);
+            box-sizing: border-box;
+            font-size: clamp(0.9rem, 1.5vw, 1.2rem);
+        }
+
+        .task,
+        .todo-task {
+            background-color: #81D4FA;
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .task:hover,
+        .todo-task:hover {
+            transform: translateY(-3px);
+        }
+
+        .expired {
+            background-color: #EF9A9A !important;
+            color: white;
+        }
+
+        .result {
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        #bottom-menu {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: var(--accent-color);
+            display: flex;
+            justify-content: space-around;
+            padding: clamp(0.6rem, 1.5vw, 0.8rem) 0;
+        }
+
+        #bottom-menu button {
+            background: none;
+            border: none;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-weight: normal;
+            font-size: 0.9rem;
+        }
+
+        #bottom-menu button:hover {
+            color: #FFF5F7;
+        }
+
+        #bottom-menu button.active-btn {
+            color: var(--highlight-color);
+            font-weight: bold;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- 登入 -->
+    <div id="login-page">
+        <h1>品延大師 您好!!!</h1>
+        <label>請輸入電話號碼</label>
+        <input type="text" id="phone-input" placeholder="輸入電話號碼">
+        <button id="login-btn">登入</button>
+    </div>
+
+    <!-- 主頁 -->
+    <div id="main-page">
+        <header>
+            品延大師任務管理系統
+            <span id="points-display">長官剩餘點數: <strong id="girl-points">0</strong></span>
+        </header>
+        <main>
+            <section id="points-page">
+                <h2>增加女友點數</h2>
+                <input type="number" id="add-points" placeholder="輸入要增加的點數">
+                <button id="add-points-btn">增加點數</button>
+            </section>
+
+            <section id="task-page">
+                <h2>任務列表</h2>
+                <div id="task-list"></div>
+                <input type="text" id="new-task" placeholder="任務名稱">
+                <input type="number" id="base-points" placeholder="基礎點數">
+                <input type="number" id="standard-time" placeholder="建議時間(小時)">
+                <button id="add-task">新增任務</button>
+            </section>
+
+            <section id="todo-page">
+                <h2>待完成任務</h2>
+                <div id="todo-list"></div>
+            </section>
+
+            <section id="settings-page">
+                <h2>Theme 設定</h2>
+                <div>
+                    <label>主色</label>
+                    <input type="color" id="main-color-picker" value="#E0F7FA">
+                </div>
+                <div>
+                    <label>卡片色</label>
+                    <input type="color" id="card-color-picker" value="#B2EBF2">
+                </div>
+                <div>
+                    <label>強調色</label>
+                    <input type="color" id="accent-color-picker" value="#006064">
+                </div>
+                <button id="save-colors-btn">儲存顏色</button>
+            </section>
+        </main>
+
+        <div id="bottom-menu">
+            <button onclick="showPage('points-page')">增加點數</button>
+            <button onclick="showPage('task-page')">任務列表</button>
+            <button onclick="showPage('todo-page')">待完成任務</button>
+            <button onclick="showPage('settings-page')">設定</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    <script>
+        window.showPage = function (id) {
+            document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
+            const page = document.getElementById(id);
+            if (page) page.classList.add('active');
+
+            document.querySelectorAll('#bottom-menu button').forEach(btn => {
+                btn.classList.remove('active-btn');
+                if (btn.getAttribute('onclick').includes(id)) btn.classList.add('active-btn');
+            });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const firebaseConfig = {
+                apiKey: "AIzaSyDn_JnNIbBx-FMAi02puLmxStoTo4XLODo",
+                authDomain: "gift-e879d.firebaseapp.com",
+                projectId: "gift-e879d",
+                storageBucket: "gift-e879d.firebasestorage.app",
+                messagingSenderId: "747195743787",
+                appId: "1:747195743787:web:e0e41f88384fe9e7bdf46e"
+            };
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+
+            let girlPoints = 0, tasks = [], todoTasks = [];
+            const loginPage = document.getElementById('login-page');
+            const mainPage = document.getElementById('main-page');
+            const girlPointsSpan = document.getElementById("girl-points");
+
+            document.getElementById('login-btn').addEventListener('click', () => {
+                const phone = document.getElementById('phone-input').value.trim();
+                if (phone === "0900268051") {
+                    loginPage.style.display = "none";
+                    mainPage.style.display = "flex";
+                    showPage('points-page');
+                    initData();
+                    loadColors();
+                } else {
+                    alert("電話號碼錯誤");
+                }
+            });
+
+            function initData() {
+                db.collection("points").doc("girlPointsDoc").onSnapshot(doc => {
+                    if (doc.exists) { girlPoints = doc.data().girlPoints; girlPointsSpan.textContent = girlPoints; }
+                });
+
+                db.collection("tasks").onSnapshot(snapshot => {
+                    tasks = []; snapshot.forEach(doc => tasks.push({ ...doc.data(), id: doc.id }));
+                    renderTasks();
+                });
+
+                db.collection("publishedTasks").onSnapshot(snapshot => {
+                    todoTasks = []; snapshot.forEach(doc => todoTasks.push({ ...doc.data(), id: doc.id }));
+                    renderTodo();
+                });
+            }
+
+            document.getElementById("add-points-btn").addEventListener("click", async () => {
+                const addValue = Number(document.getElementById("add-points").value);
+                if (!addValue || addValue <= 0) return alert("請輸入有效點數");
+                const docRef = db.collection("points").doc("girlPointsDoc");
+                const docSnap = await docRef.get();
+                const newTotal = docSnap.exists ? docSnap.data().girlPoints + addValue : addValue;
+                await docRef.set({ girlPoints: newTotal });
+                alert(`已增加 ${addValue} 點，女友目前共有 ${newTotal} 點`);
+                document.getElementById("add-points").value = "";
+            });
+
+            function renderTasks() {
+                const container = document.getElementById("task-list");
+                container.innerHTML = "";
+                tasks.forEach(t => {
+                    const div = document.createElement("div");
+                    div.className = "task";
+                    div.innerHTML = `<p><strong>${t.name}</strong> - ${t.basePoints}點 - ${t.standardTime}小時</p>
+            <button onclick="deleteTask('${t.id}')">刪除</button>`;
+                    container.appendChild(div);
+                });
+            }
+            document.getElementById("add-task").addEventListener("click", () => {
+                const name = document.getElementById("new-task").value;
+                const points = Number(document.getElementById("base-points").value);
+                const time = Number(document.getElementById("standard-time").value);
+                if (!name || !points || !time) return alert("請完整填寫任務資料");
+                db.collection("tasks").add({ name, basePoints: points, standardTime: time });
+                document.getElementById("new-task").value = "";
+                document.getElementById("base-points").value = "";
+                document.getElementById("standard-time").value = "";
+            });
+            window.deleteTask = id => db.collection("tasks").doc(id).delete();
+
+            function renderTodo() {
+                const container = document.getElementById("todo-list");
+                container.innerHTML = "";
+                todoTasks.forEach(t => {
+                    const div = document.createElement("div");
+                    div.className = "todo-task"; div.id = `todo-${t.id}`;
+                    const rewards = Array.isArray(t.reward) ? t.reward : [t.reward].filter(r => r);
+                    div.innerHTML = `<p><strong>${t.task}</strong> (${t.points}點, ${t.time}小時)</p>
+            <p>獎勵: ${rewards.join(', ')}</p>
+            <p class="result">狀態: ${t.status}</p>
+            <button onclick="markAsDone('${t.id}')">✅ 兌換/清除</button>`;
+                    container.appendChild(div);
+                });
+            }
+            window.markAsDone = async id => {
+                if (!confirm("確定要刪除這個任務嗎？")) return;
+                await db.collection("publishedTasks").doc(id).delete();
+            }
+
+            const mainPicker = document.getElementById("main-color-picker");
+            const cardPicker = document.getElementById("card-color-picker");
+            const accentPicker = document.getElementById("accent-color-picker");
+
+            document.getElementById("save-colors-btn").addEventListener("click", () => {
+                const colors = { main: mainPicker.value, card: cardPicker.value, accent: accentPicker.value };
+                localStorage.setItem("boyfriendColors", JSON.stringify(colors));
+                applyColors(colors);
+            });
+
+            function applyColors(colors) {
+                document.documentElement.style.setProperty('--main-color', colors.main);
+                document.documentElement.style.setProperty('--card-color', colors.card);
+                document.documentElement.style.setProperty('--accent-color', colors.accent);
+            }
+
+            function loadColors() {
+                const colors = JSON.parse(localStorage.getItem("boyfriendColors") || '{}');
+                if (colors.main) mainPicker.value = colors.main;
+                if (colors.card) cardPicker.value = colors.card;
+                if (colors.accent) accentPicker.value = colors.accent;
+                applyColors(colors);
+            }
+        });
+    </script>
+</body>
+
+</html>
