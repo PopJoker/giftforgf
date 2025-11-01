@@ -435,6 +435,13 @@
                                 const m = Math.floor(diff / 1000 / 60 % 60);
                                 const s = Math.floor(diff / 1000 % 60);
                                 timerEl.textContent = `剩餘時間：${h}時 ${m}分 ${s}秒`;
+
+                                // ⚠️ 剩下 1 分鐘提醒
+                                if (diff <= 60 * 1000 && !div.classList.contains("warning")) {
+                                    div.classList.add("warning");
+                                    div.style.backgroundColor = "#FFCC80"; // 橘色提醒
+                                    await sendDiscordNotification(`⚠️ 任務 "${t.task}" 剩下不到 1 分鐘！`);
+                                }
                             }
                         }, 1000);
             
