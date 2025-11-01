@@ -390,79 +390,145 @@
                     const div = document.createElement("div");
                     div.className = "todo-task";
                     div.id = `todo-${t.id}`;
-                    div.timerStopped = false; // ← 新增
-                
+                    div.timerStopped = false; // 控制倒數是否停止
+            
                     const timerElId = `timer-${t.id}`;
+                    const rewards = Array.isArray(t.reward) ? t.reward : [t.reward].filter(r => r);
+                    const punishments = Array.isArray(t.result) ? t.result : [t.result].filter(r => r);
+            
+                    // 計算截止時間
                     let deadline = t.timestamp ? t.timestamp.toDate().getTime() + t.time * 60 * 60 * 1000 : Date.now();
-                
+            
+                    // 生成 HTML
                     if (t.status === "待完成" || t.status === "待女友確認") {
                         div.innerHTML = `<p><strong>${t.task}</strong> (${t.points}點, ${t.time}小時)</p>
+                                         <p>獎勵: ${rewards.join(', ')}</p>
                                          <p class="result">狀態: ${t.status}</p>
-                                         <p id="${timerElId}"></p>
+                                         <p id="${timerElId}">倒數計時載入中...</p>
                                          ${t.status === "待完成" 
                                              ? `<button onclick="completeTask('${t.id}', '${t.task}')">完成任務</button>` 
                                              : `<span>等待女友確認</span>`}`;
                         container.appendChild(div);
-                        
+            
+                        // 計時器
                         const timerEl = document.getElementById(timerElId);
                         const timer = setInterval(async () => {
-                            if (div.timerStopped) return; // ← 新增，停止倒數
-                
+                            if (div.timerStopped) return;
+            
                             const now = Date.now();
                             const diff = deadline - now;
-                
+            
                             if (diff <= 0 && t.status === "待完成") {
                                 clearInterval(timer);
-                                div.timerStopped = true; // 確保不再觸發
-                                // 隨機懲罰...
+                                div.timerStopped = true;
+                                div.classList.add("expired");
+                                timerEl.textContent = "⏰ 已逾時";
+            
+                                // 隨機懲罰
+                                const punishSnap = await db.collection("punishments").get();
+                                let randomPunishment = "";
+                                if (!punishSnap.empty) {
+                                    const arr = punishSnap.docs.map(d => d.data().text);
+                                    randomPunishment = arr[Math.floor(Math.random() * arr.length)];
+                                }
+            
+                                await db.collection("publishedTasks").doc(t.id).update({
+                                    status: "逾時",
+                                    result: firebase.firestore.FieldValue.arrayUnion(randomPunishment)
+                                });
+                                await sendDiscordNotification(`任務 "${t.task}" 已逾時! 懲罰: ${randomPunishment}`);
                             } else if (diff > 0) {
                                 const h = Math.floor(diff / 1000 / 3600);
                                 const m = Math.floor(diff / 1000 / 60 % 60);
                                 const s = Math.floor(diff / 1000 % 60);
                                 timerEl.textContent = `剩餘時間：${h}時 ${m}分 ${s}秒`;
+            
+                                // ⚠️ 剩下 1 分鐘提醒
+                                if (diff <= 60 * 1000 && !div.classList.contains("warning")) {
+                                    div.classList.add("warning");
+                                    div.style.backgroundColor = "#FFCC80"; // 橘色提醒
+                                    await sendDiscordNotification(`⚠️ 任務 "${t.task}" 剩下不到 1 分鐘！`);
+                                }
                             }
                         }, 1000);
-                
+            
                         div.timer = timer;
+                    } else {
+                        // 已完成或逾時任務
+                        div.innerHTML = `<p><strong>${t.task}</strong></p>
+                                         <p>獎勵: ${rewards.join(', ')}</p>
+                                         <p>懲罰: ${punishments.join(', ')}</p>
+                                         <button onclick="markAsDone('${t.id}', '${t.task}')">✅ 兌換/清除</button>`;
+                        container.appendChild(div);
                     }
                 });
-
             }
+
 
         
             window.completeTask = async (id, taskName) => {
                 try {
-                    // 更新任務狀態
+                    const div = document.getElementById(`todo-${id}`);
+                    if (!div) return;
+            
+                    // 停止倒數計時器
+                    if (div.timer) {
+                        clearInterval(div.timer);
+                        div.timer = null;
+                        div.timerStopped = true;
+                    }
+            
+                    // 更新任務狀態為待女友確認
                     await db.collection("publishedTasks").doc(id).update({
                         status: "待女友確認"
                     });
-            
-                    // 停止倒數計時器
-                    const div = document.getElementById(`todo-${id}`);
-                    if (div && div.timer) {
-                        clearInterval(div.timer);
-                        div.timer = null;
-                        div.timerStopped = true; // ← 標記停止
-                    }
             
                     // 更新 UI
                     const timerEl = document.getElementById(`timer-${id}`);
                     if (timerEl) timerEl.textContent = "✅ 任務完成，倒數停止";
             
                     alert("任務已完成，倒數已停止，等待女友確認");
-            
                     await sendDiscordNotification(`任務 "${taskName}" 已完成，等待女友確認`);
                 } catch (err) {
                     console.error(err);
                     alert("更新任務失敗");
                 }
             };
-        
+            
             window.markAsDone = async (id, taskName) => {
                 if (!confirm("確定要刪除這個任務嗎？")) return;
+            
+                const div = document.getElementById(`todo-${id}`);
+                if (div && div.timer) {
+                    clearInterval(div.timer);
+                    div.timer = null;
+                    div.timerStopped = true;
+                }
+            
                 await db.collection("publishedTasks").doc(id).delete();
                 await sendDiscordNotification(`任務 "${taskName}" 已被兌換或刪除`);
-            }
+            
+                // 重新渲染
+                renderTodo();
+            };
+
+        
+           window.markAsDone = async (id, taskName) => {
+                if (!confirm("確定要刪除這個任務嗎？")) return;
+            
+                const div = document.getElementById(`todo-${id}`);
+                if (div && div.timer) {
+                    clearInterval(div.timer);
+                    div.timer = null;
+                    div.timerStopped = true;
+                }
+            
+                await db.collection("publishedTasks").doc(id).delete();
+                await sendDiscordNotification(`任務 "${taskName}" 已被兌換或刪除`);
+            
+                // 重新渲染
+                renderTodo();
+            };
         
             const mainPicker = document.getElementById("main-color-picker");
             const cardPicker = document.getElementById("card-color-picker");
