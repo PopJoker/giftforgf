@@ -270,13 +270,13 @@
             document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
             const page = document.getElementById(id);
             if (page) page.classList.add('active');
-
+        
             document.querySelectorAll('#bottom-menu button').forEach(btn => {
                 btn.classList.remove('active-btn');
                 if (btn.getAttribute('onclick').includes(id)) btn.classList.add('active-btn');
             });
         }
-
+        
         document.addEventListener("DOMContentLoaded", () => {
             const firebaseConfig = {
                 apiKey: "AIzaSyDn_JnNIbBx-FMAi02puLmxStoTo4XLODo",
@@ -288,12 +288,26 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-
+        
+            const webhookUrl = "https://discord.com/api/webhooks/1434221816150364170/cAveS2GI6w9uwXEm50EbcVgg9yHkwiGZ_VprgXmG-Kq2fPdk4uVv4IjxtGm5y6mdmMsF";
+        
+            async function sendDiscordNotification(message) {
+                try {
+                    await fetch(webhookUrl, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ content: message })
+                    });
+                } catch (err) {
+                    console.error("Discord通知失敗:", err);
+                }
+            }
+        
             let girlPoints = 0, tasks = [], todoTasks = [];
             const loginPage = document.getElementById('login-page');
             const mainPage = document.getElementById('main-page');
             const girlPointsSpan = document.getElementById("girl-points");
-
+        
             document.getElementById('login-btn').addEventListener('click', () => {
                 const phone = document.getElementById('phone-input').value.trim();
                 if (phone === "0900268051") {
@@ -306,23 +320,23 @@
                     alert("電話號碼錯誤");
                 }
             });
-
+        
             function initData() {
                 db.collection("points").doc("girlPointsDoc").onSnapshot(doc => {
                     if (doc.exists) { girlPoints = doc.data().girlPoints; girlPointsSpan.textContent = girlPoints; }
                 });
-
+        
                 db.collection("tasks").onSnapshot(snapshot => {
                     tasks = []; snapshot.forEach(doc => tasks.push({ ...doc.data(), id: doc.id }));
                     renderTasks();
                 });
-
+        
                 db.collection("publishedTasks").onSnapshot(snapshot => {
                     todoTasks = []; snapshot.forEach(doc => todoTasks.push({ ...doc.data(), id: doc.id }));
                     renderTodo();
                 });
             }
-
+        
             document.getElementById("add-points-btn").addEventListener("click", async () => {
                 const addValue = Number(document.getElementById("add-points").value);
                 if (!addValue || addValue <= 0) return alert("請輸入有效點數");
@@ -332,8 +346,11 @@
                 await docRef.set({ girlPoints: newTotal });
                 alert(`已增加 ${addValue} 點，女友目前共有 ${newTotal} 點`);
                 document.getElementById("add-points").value = "";
+        
+                // Discord通知
+                await sendDiscordNotification(`女友點數已增加 ${addValue} 點，目前總數 ${newTotal} 點`);
             });
-
+        
             function renderTasks() {
                 const container = document.getElementById("task-list");
                 container.innerHTML = "";
@@ -341,36 +358,42 @@
                     const div = document.createElement("div");
                     div.className = "task";
                     div.innerHTML = `<p><strong>${t.name}</strong> - ${t.basePoints}點 - ${t.standardTime}小時</p>
-            <button onclick="deleteTask('${t.id}')">刪除</button>`;
+                    <button onclick="deleteTask('${t.id}')">刪除</button>`;
                     container.appendChild(div);
                 });
             }
-            document.getElementById("add-task").addEventListener("click", () => {
+            document.getElementById("add-task").addEventListener("click", async () => {
                 const name = document.getElementById("new-task").value;
                 const points = Number(document.getElementById("base-points").value);
                 const time = Number(document.getElementById("standard-time").value);
                 if (!name || !points || !time) return alert("請完整填寫任務資料");
-                db.collection("tasks").add({ name, basePoints: points, standardTime: time });
+                const docRef = await db.collection("tasks").add({ name, basePoints: points, standardTime: time });
                 document.getElementById("new-task").value = "";
                 document.getElementById("base-points").value = "";
                 document.getElementById("standard-time").value = "";
+        
+                await sendDiscordNotification(`新增任務: "${name}" - ${points}點, 建議時間 ${time} 小時`);
             });
-            window.deleteTask = id => db.collection("tasks").doc(id).delete();
-
+            window.deleteTask = async id => {
+                const taskDoc = await db.collection("tasks").doc(id).get();
+                await db.collection("tasks").doc(id).delete();
+                if (taskDoc.exists) {
+                    await sendDiscordNotification(`任務 "${taskDoc.data().name}" 已被刪除`);
+                }
+            }
+        
             function renderTodo() {
                 const container = document.getElementById("todo-list");
                 container.innerHTML = "";
-            
+        
                 todoTasks.forEach(t => {
                     const div = document.createElement("div");
                     div.className = "todo-task";
                     div.id = `todo-${t.id}`;
-            
-                    // 確保 reward 與 result 都是陣列
+        
                     const rewards = Array.isArray(t.reward) ? t.reward : [t.reward].filter(r => r);
                     const punishments = Array.isArray(t.result) ? t.result : [t.result].filter(r => r);
-            
-                    // 判斷任務狀態
+        
                     if (t.status === "待完成" || t.status === "待女友確認") {
                         const deadline = t.timestamp ? t.timestamp.toDate().getTime() + t.time * 60 * 60 * 1000 : Date.now();
                         div.innerHTML = `<p><strong>${t.task}</strong> (${t.points}點, ${t.time}小時)</p>
@@ -378,14 +401,14 @@
                                          <p class="result">狀態: ${t.status}</p>
                                          <p id="timer-${t.id}"></p>
                                          ${t.status === "待完成" 
-                                            ? `<button onclick="completeTask('${t.id}')">完成任務</button>` 
+                                            ? `<button onclick="completeTask('${t.id}', '${t.task}')">完成任務</button>` 
                                             : `<span class="orange-text">等待女友確認</span>`}`;
-                        
+        
                         const timerEl = document.getElementById(`timer-${t.id}`);
                         const timer = setInterval(async () => {
                             const now = Date.now();
                             const diff = deadline - now;
-            
+        
                             if (diff <= 0 && t.status === "待完成") {
                                 clearInterval(timer);
                                 const punishSnap = await db.collection("punishments").get();
@@ -400,6 +423,7 @@
                                 });
                                 div.classList.add("expired");
                                 timerEl.textContent = "⏰ 已逾時";
+                                await sendDiscordNotification(`任務 "${t.task}" 已逾時! 懲罰: ${randomPunishment}`);
                             } else if (diff > 0) {
                                 const h = Math.floor(diff / 1000 / 3600);
                                 const m = Math.floor(diff / 1000 / 60 % 60);
@@ -409,51 +433,51 @@
                         }, 1000);
                         div.timer = timer;
                     } else {
-                        // 已完成 / 忽略 / 逾時，列出所有獎勵與懲罰
                         div.innerHTML = `<p><strong>${t.task}</strong></p>
                                          <p>獎勵: ${rewards.join(', ')}</p>
                                          <p>懲罰: ${punishments.join(', ')}</p>
-                                         <button onclick="markAsDone('${t.id}')">✅ 兌換/清除</button>`;
+                                         <button onclick="markAsDone('${t.id}', '${t.task}')">✅ 兌換/清除</button>`;
                     }
-            
+        
                     container.appendChild(div);
                 });
             }
-
-            window.completeTask = async (id) => {
+        
+            window.completeTask = async (id, taskName) => {
                 try {
-                    // 將該任務狀態改為「待女友確認」
                     await db.collection("publishedTasks").doc(id).update({
                         status: "待女友確認"
                     });
                     alert("任務已完成，等待女友確認");
+                    await sendDiscordNotification(`任務 "${taskName}" 已完成，等待女友確認`);
                 } catch (err) {
                     console.error(err);
                     alert("更新任務失敗");
                 }
             };
-
-            window.markAsDone = async id => {
+        
+            window.markAsDone = async (id, taskName) => {
                 if (!confirm("確定要刪除這個任務嗎？")) return;
                 await db.collection("publishedTasks").doc(id).delete();
+                await sendDiscordNotification(`任務 "${taskName}" 已被兌換或刪除`);
             }
-
+        
             const mainPicker = document.getElementById("main-color-picker");
             const cardPicker = document.getElementById("card-color-picker");
             const accentPicker = document.getElementById("accent-color-picker");
-
+        
             document.getElementById("save-colors-btn").addEventListener("click", () => {
                 const colors = { main: mainPicker.value, card: cardPicker.value, accent: accentPicker.value };
                 localStorage.setItem("boyfriendColors", JSON.stringify(colors));
                 applyColors(colors);
             });
-
+        
             function applyColors(colors) {
                 document.documentElement.style.setProperty('--main-color', colors.main);
                 document.documentElement.style.setProperty('--card-color', colors.card);
                 document.documentElement.style.setProperty('--accent-color', colors.accent);
             }
-
+        
             function loadColors() {
                 const colors = JSON.parse(localStorage.getItem("boyfriendColors") || '{}');
                 if (colors.main) mainPicker.value = colors.main;
@@ -462,7 +486,8 @@
                 applyColors(colors);
             }
         });
-    </script>
+        </script>
+
 </body>
 
 </html>
