@@ -460,10 +460,24 @@
         
             window.completeTask = async (id, taskName) => {
                 try {
+                    // 更新任務狀態
                     await db.collection("publishedTasks").doc(id).update({
                         status: "待女友確認"
                     });
-                    alert("任務已完成，等待女友確認");
+            
+                    // 停止倒數計時器
+                    const div = document.getElementById(`todo-${id}`);
+                    if (div && div.timer) {
+                        clearInterval(div.timer);
+                        div.timer = null; // 清掉 reference
+                    }
+            
+                    // 更新 UI
+                    const timerEl = document.getElementById(`timer-${id}`);
+                    if (timerEl) timerEl.textContent = "✅ 任務完成，倒數停止";
+            
+                    alert("任務已完成，倒數已停止，等待女友確認");
+            
                     await sendDiscordNotification(`任務 "${taskName}" 已完成，等待女友確認`);
                 } catch (err) {
                     console.error(err);
