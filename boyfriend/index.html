@@ -26,7 +26,6 @@
             min-height: 100vh;
         }
 
-        /* 登入頁 */
         #login-page {
             position: fixed;
             top: 50%;
@@ -55,7 +54,6 @@
             box-sizing: border-box;
         }
 
-        /* 主頁 */
         #main-page {
             display: none;
             flex-direction: column;
@@ -64,19 +62,15 @@
 
         header {
             position: sticky;
-            /* 讓 header 隨頁面滾動固定 */
             top: 0;
             padding: clamp(0.8rem, 2vw, 1.5rem);
             text-align: center;
             background-color: var(--main-color);
-            /* 固定底色 */
             border-bottom: 2px solid var(--accent-color);
             font-size: clamp(1.2rem, 2.5vw, 2rem);
             font-weight: bold;
             z-index: 1000;
-            /* 確保 header 在最上層 */
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            /* 輕微陰影 */
         }
 
         #points-display {
@@ -143,7 +137,8 @@
         }
 
         .task,
-        .todo-task {
+        .todo-task,
+        .punishment-item {
             background-color: #81D4FA;
             border-radius: 15px;
             padding: 15px;
@@ -153,7 +148,8 @@
         }
 
         .task:hover,
-        .todo-task:hover {
+        .todo-task:hover,
+        .punishment-item:hover {
             transform: translateY(-3px);
         }
 
@@ -237,6 +233,13 @@
                 <div id="todo-list"></div>
             </section>
 
+            <section id="punishment-page">
+                <h2>懲罰管理</h2>
+                <input type="text" id="new-punishment" placeholder="輸入懲罰內容">
+                <button id="add-punishment">新增懲罰</button>
+                <div id="punishment-list"></div>
+            </section>
+
             <section id="settings-page">
                 <h2>Theme 設定</h2>
                 <div>
@@ -259,6 +262,7 @@
             <button onclick="showPage('points-page')">增加點數</button>
             <button onclick="showPage('task-page')">任務列表</button>
             <button onclick="showPage('todo-page')">待完成任務</button>
+            <button onclick="showPage('punishment-page')">懲罰管理</button>
             <button onclick="showPage('settings-page')">設定</button>
         </div>
     </div>
@@ -289,7 +293,7 @@
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
 
-            let girlPoints = 0, tasks = [], todoTasks = [];
+            let girlPoints = 0, tasks = [], todoTasks = [], punishments = [];
             const loginPage = document.getElementById('login-page');
             const mainPage = document.getElementById('main-page');
             const girlPointsSpan = document.getElementById("girl-points");
@@ -320,6 +324,12 @@
                 db.collection("publishedTasks").onSnapshot(snapshot => {
                     todoTasks = []; snapshot.forEach(doc => todoTasks.push({ ...doc.data(), id: doc.id }));
                     renderTodo();
+                });
+
+                db.collection("punishments").onSnapshot(snapshot => {
+                    punishments = [];
+                    snapshot.forEach(doc => punishments.push({ ...doc.data(), id: doc.id }));
+                    renderPunishments();
                 });
             }
 
@@ -363,10 +373,24 @@
                 todoTasks.forEach(t => {
                     const div = document.createElement("div");
                     div.className = "todo-task"; div.id = `todo-${t.id}`;
+                    const now = new Date();
+                    const deadline = t.deadline ? t.deadline.toDate() : null;
+                    let statusText = t.status;
+
+                    if (deadline && now > deadline && t.status === "待完成") {
+                        statusText = "逾時";
+                        div.classList.add("expired");
+                        if (punishments.length > 0) {
+                            const idx = Math.floor(Math.random() * punishments.length);
+                            const punishmentText = punishments[idx].text;
+                            statusText += ` - 懲罰: ${punishmentText}`;
+                        }
+                    }
+
                     const rewards = Array.isArray(t.reward) ? t.reward : [t.reward].filter(r => r);
                     div.innerHTML = `<p><strong>${t.task}</strong> (${t.points}點, ${t.time}小時)</p>
             <p>獎勵: ${rewards.join(', ')}</p>
-            <p class="result">狀態: ${t.status}</p>
+            <p class="result">狀態: ${statusText}</p>
             <button onclick="markAsDone('${t.id}')">✅ 兌換/清除</button>`;
                     container.appendChild(div);
                 });
@@ -375,6 +399,24 @@
                 if (!confirm("確定要刪除這個任務嗎？")) return;
                 await db.collection("publishedTasks").doc(id).delete();
             }
+
+            function renderPunishments() {
+                const container = document.getElementById("punishment-list");
+                container.innerHTML = "";
+                punishments.forEach(p => {
+                    const div = document.createElement("div");
+                    div.className = "punishment-item";
+                    div.innerHTML = `<p>${p.text}</p><button onclick="deletePunishment('${p.id}')">刪除</button>`;
+                    container.appendChild(div);
+                });
+            }
+            document.getElementById("add-punishment").addEventListener("click", () => {
+                const val = document.getElementById("new-punishment").value;
+                if (!val) return alert("請輸入懲罰內容");
+                db.collection("punishments").add({ text: val });
+                document.getElementById("new-punishment").value = "";
+            });
+            window.deletePunishment = id => db.collection("punishments").doc(id).delete();
 
             const mainPicker = document.getElementById("main-color-picker");
             const cardPicker = document.getElementById("card-color-picker");
