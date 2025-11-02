@@ -212,10 +212,43 @@
 
     <!-- 主頁 -->
     <div id="main-page">
-        <header>
-            品延大師任務管理系統
-            <span id="points-display">長官剩餘點數: <strong id="girl-points">0</strong></span>
+        <header class="header">
+            <h1>品延大師任務管理系統</h1>
+            <div class="points">
+                長官剩餘點數: <strong id="girl-points">0</strong>
+            </div>
         </header>
+        
+        <style>
+        header.header {
+            display: flex;
+            flex-wrap: wrap; /* ⭐ 手機螢幕時自動換行 */
+            justify-content: space-between; /* 兩邊對齊 */
+            align-items: center; /* 垂直置中 */
+            padding: 10px 16px;
+            background-color: #2c3e50;
+            color: white;
+            font-size: 18px;
+            gap: 8px; /* 標題與點數間距 */
+        }
+        
+        /* 讓手機上更好看 */
+        header.header h1 {
+            font-size: 18px;
+            margin: 0;
+        }
+        
+        header.header .points {
+            font-size: 16px;
+        }
+        
+        @media (max-width: 480px) {
+            header.header {
+                flex-direction: column; /* 📱 小螢幕時改成上下排列 */
+                text-align: center;
+            }
+        }
+        </style>
         <main>
             <section id="points-page">
                 <h2>增加女友點數</h2>
