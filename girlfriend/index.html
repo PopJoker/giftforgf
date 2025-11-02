@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +9,8 @@
             --main-color: #FFD3E0;
             --card-color: #FFE4F0;
             --accent-color: #FF7EB3;
+            --header-bg: var(--main-color);
+            --header-text: #000;
         }
 
         html {
@@ -22,13 +23,7 @@
             background-color: #FFF5F7;
             color: var(--accent-color);
             min-height: 100vh;
-
-            /* 單一卡片置中 */
-            /* display: flex;
-            justify-content: center;
-            align-items: center; */
         }
-
 
         /* 登入頁單獨置中 */
         #login-page.active {
@@ -43,7 +38,6 @@
             max-width: 400px;
         }
 
-        /* 登入卡片 */
         #login-page {
             background-color: var(--card-color);
             padding: clamp(1rem, 5vw, 2rem);
@@ -71,33 +65,44 @@
             padding: clamp(0.5rem, 1.5vw, 0.8rem);
         }
 
-        /* 隱藏後 main-page 使用正常流排版 */
         #main-page {
             display: none;
-            /* 登入後才顯示 */
             width: 100%;
         }
 
-        header {
-            margin: 0;
-            padding: clamp(0.8rem, 2vw, 1.5rem);
-            text-align: center;
-            background-color: var(--main-color);
-            border-bottom: 2px solid var(--accent-color);
-            border-radius: 0 0 15px 15px;
-            color: white;
-            font-size: clamp(1.2rem, 2.5vw, 2rem);
-            position: relative;
-            transition: background-color 0.3s;
+        /* 🔹 HEADER */
+        header.header {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--header-bg);
+            color: var(--header-text);
+            font-size: 18px;
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            gap: 8px;
+            transition: background 0.3s, color 0.3s;
         }
 
-        #points-display {
-            position: absolute;
-            right: clamp(0.5rem, 2vw, 1rem);
-            top: 50%;
-            transform: translateY(-50%);
-            font-weight: bold;
-            font-size: clamp(0.8rem, 1.5vw, 1.2rem);
+        header.header h1 {
+            font-size: 20px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        header.header .points {
+            font-size: 16px;
+        }
+
+        @media (max-width: 480px) {
+            header.header {
+                flex-direction: column;
+                text-align: center;
+                gap: 4px;
+            }
         }
 
         main {
@@ -125,11 +130,6 @@
 
         section.active {
             display: block;
-        }
-
-        h1,
-        h2 {
-            margin: 0 0 clamp(0.5rem, 1vw, 1rem) 0;
         }
 
         button {
@@ -186,6 +186,7 @@
             padding: clamp(0.4rem, 1.5vw, 0.8rem) 0;
             border-top-left-radius: 15px;
             border-top-right-radius: 15px;
+            transition: background-color 0.3s;
         }
 
         #bottom-menu button {
@@ -216,52 +217,13 @@
     </div>
 
     <!-- 主頁 -->
-    <div id="main-page" style="display:none; width:100%;">
+    <div id="main-page">
         <header class="header">
-    <h1>妤慈公主奴才管理系統</h1>
-        <div class="points">
-            剩餘點數: <strong id="girl-points">0</strong>
-        </div>
-    </header>
-    
-    <style>
-    header.header {
-        display: flex;
-        flex-wrap: wrap; /* 手機時自動換行 */
-        justify-content: space-between; /* 左右分佈 */
-        align-items: center; /* 垂直置中 */
-        padding: 12px 16px;
-        background: rgba(44, 62, 80, 0.8); /* 玻璃質感深色背景 */
-        color: white;
-        font-size: 18px;
-        backdrop-filter: blur(8px); /* 模糊背景 */
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        gap: 8px; /* 標題與點數間距 */
-    }
-    
-    /* 文字樣式 */
-    header.header h1 {
-        font-size: 20px;
-        margin: 0;
-        font-weight: 600;
-    }
-    
-    header.header .points {
-        font-size: 16px;
-    }
-    
-    /* 手機模式：上下排列置中 */
-    @media (max-width: 480px) {
-        header.header {
-            flex-direction: column;
-            text-align: center;
-            gap: 4px;
-        }
-    }
-    </style>
+            <h1>妤慈公主奴才管理系統</h1>
+            <div class="points">剩餘點數: <strong id="girl-points">0</strong></div>
+        </header>
+
         <main>
-            <!-- 發布任務 -->
             <section id="publish-page">
                 <h2>發布任務</h2>
                 <label>選擇任務</label>
@@ -274,13 +236,11 @@
                 <button id="publish-btn">發布任務</button>
             </section>
 
-            <!-- 任務審核 -->
             <section id="verify-page">
                 <h2>任務審核</h2>
                 <div id="verify-list"></div>
             </section>
 
-            <!-- 懲罰管理 -->
             <section id="punishment-page">
                 <h2>懲罰管理</h2>
                 <input type="text" id="new-punishment" placeholder="輸入懲罰內容">
@@ -288,7 +248,6 @@
                 <div id="punishment-list"></div>
             </section>
 
-            <!-- 設定配色 -->
             <section id="settings-page">
                 <h2>介面設定</h2>
                 <div class="color-picker">
@@ -330,9 +289,9 @@
             };
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-        
+
             const webhookUrl = "https://discord.com/api/webhooks/1434221816150364170/cAveS2GI6w9uwXEm50EbcVgg9yHkwiGZ_VprgXmG-Kq2fPdk4uVv4IjxtGm5y6mdmMsF";
-        
+
             async function sendDiscordNotification(message) {
                 try {
                     await fetch(webhookUrl, {
@@ -344,180 +303,35 @@
                     console.error("Discord通知失敗:", err);
                 }
             }
-        
-            let boyfriendTasks = [], punishments = [], girlPoints = 0;
+
+            let girlPoints = 0;
             const loginPage = document.getElementById('login-page');
             const mainPage = document.getElementById('main-page');
             const girlPointsSpan = document.getElementById("girl-points");
-        
+
             // 登入
             document.getElementById('login-btn').addEventListener('click', () => {
                 const phone = document.getElementById('phone-input').value.trim();
                 if (phone === "0906832528") {
                     loginPage.style.display = "none";
                     mainPage.style.display = "block";
-                    initData();
                     loadColors();
                     showPage('publish-page');
                 } else {
                     alert("電話號碼錯誤");
                 }
             });
-        
-            // 分頁切換
+
             window.showPage = (id) => {
                 document.querySelectorAll('main section').forEach(sec => sec.classList.remove('active'));
                 document.getElementById(id).classList.add('active');
             };
-        
-            function initData() {
-                // 點數同步
-                db.collection("points").doc("girlPointsDoc").onSnapshot(doc => {
-                    if (doc.exists) { 
-                        girlPoints = doc.data().girlPoints; 
-                        girlPointsSpan.textContent = girlPoints; 
-                    }
-                });
-        
-                // 任務監聽
-                db.collection("tasks").onSnapshot(snapshot => {
-                    boyfriendTasks = []; 
-                    snapshot.forEach(doc => boyfriendTasks.push({ ...doc.data(), id: doc.id }));
-                    renderTaskList();
-                });
-        
-                // 懲罰監聽
-                db.collection("punishments").onSnapshot(snapshot => {
-                    punishments = []; 
-                    snapshot.forEach(doc => punishments.push({ ...doc.data(), id: doc.id }));
-                    renderPunishments();
-                });
-        
-                // 任務審核監聽
-                db.collection("publishedTasks").where("status", "==", "待女友確認")
-                    .onSnapshot(snapshot => {
-                        const list = document.getElementById("verify-list");
-                        list.innerHTML = "";
-                        snapshot.forEach(doc => {
-                            const data = doc.data();
-                            const div = document.createElement("div");
-                            div.className = "task-item";
-                            div.innerHTML = `
-                                <p><strong>${data.task}</strong> (${data.points}點)</p>
-                                <p>獎勵: ${data.reward}</p>
-                                <button onclick="verifyTask('${doc.id}', true)">確認完成</button>
-                                <button onclick="verifyTask('${doc.id}', false)">忽略</button>`;
-                            list.appendChild(div);
-                        });
-                    });
-            }
-        
-            function renderTaskList() {
-                const select = document.getElementById("task-list");
-                select.innerHTML = "";
-                boyfriendTasks.forEach((t, i) => {
-                    const opt = document.createElement("option"); 
-                    opt.value = i; 
-                    opt.textContent = t.name; 
-                    select.appendChild(opt);
-                });
-                updateTimeLimit();
-                calculateConsumePoints();
-            }
-        
-            document.getElementById("task-list").addEventListener("change", () => {
-                updateTimeLimit(); 
-                calculateConsumePoints();
-            });
-        
-            function updateTimeLimit() {
-                const idx = document.getElementById("task-list").value;
-                if (boyfriendTasks[idx]) document.getElementById("time-limit").value = boyfriendTasks[idx].standardTime;
-            }
-        
-            document.getElementById("time-limit").addEventListener("input", calculateConsumePoints);
-        
-            function calculateConsumePoints() {
-                const idx = document.getElementById("task-list").value;
-                const task = boyfriendTasks[idx];
-                if (!task) return 0;
-                let userTime = Number(document.getElementById("time-limit").value);
-                if (!userTime || userTime <= 0) userTime = task.standardTime;
-                const consume = Math.ceil(task.basePoints * (task.standardTime / userTime));
-                document.getElementById("consume-points").textContent = consume;
-                return consume;
-            }
-        
-            // 發布任務
-            document.getElementById("publish-btn").addEventListener("click", async () => {
-                const idx = document.getElementById("task-list").value;
-                const task = boyfriendTasks[idx];
-                if (!task) return;
-                const time = Number(document.getElementById("time-limit").value) || task.standardTime;
-                const reward = document.getElementById("reward").value;
-                const consume = calculateConsumePoints();
-                if (consume > girlPoints) return alert("點數不足");
-        
-                girlPoints -= consume;
-                await db.collection("points").doc("girlPointsDoc").set({ girlPoints });
-                const deadline = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + time * 60 * 60 * 1000));
-                await db.collection("publishedTasks").add({
-                    task: task.name,
-                    time,
-                    points: consume,
-                    reward,
-                    status: "待完成",
-                    deadline,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                alert("任務發布成功！");
-                document.getElementById("reward").value = "";
-        
-                // Discord通知
-                await sendDiscordNotification(`發布任務: "${task.name}", 消耗點數: ${consume}, 獎勵: ${reward}, 完成時間: ${time} 小時`);
-            });
-        
-            // 懲罰管理
-            function renderPunishments() {
-                const container = document.getElementById("punishment-list");
-                container.innerHTML = "";
-                punishments.forEach((p) => {
-                    const div = document.createElement("div");
-                    div.className = "punishment-item";
-                    div.innerHTML = `<p>${p.text}</p><button onclick="deletePunishment('${p.id}', '${p.text}')">刪除</button>`;
-                    container.appendChild(div);
-                });
-            }
-        
-            document.getElementById("add-punishment").addEventListener("click", async () => {
-                const val = document.getElementById("new-punishment").value;
-                if (val && punishments.length < 20) {
-                    const docRef = await db.collection("punishments").add({ text: val });
-                    document.getElementById("new-punishment").value = "";
-                    await sendDiscordNotification(`新增懲罰: "${val}"`);
-                } else alert("最多20個懲罰");
-            });
-        
-            window.deletePunishment = async (id, text) => {
-                await db.collection("punishments").doc(id).delete();
-                await sendDiscordNotification(`刪除懲罰: "${text}"`);
-            };
-        
-            // 任務審核
-            window.verifyTask = async (id, approve) => {
-                const ref = db.collection("publishedTasks").doc(id);
-                const doc = await ref.get();
-                if (!doc.exists) return;
-                await ref.update({ status: approve ? "已完成" : "忽略" });
-                alert(approve ? "任務確認完成！" : "已忽略任務");
-                await sendDiscordNotification(`任務 "${doc.data().task}" 已被${approve ? '確認完成' : '忽略'}`);
-            }
-        
-            // 顏色設定
+
+            // 🎨 顏色設定
             const mainPicker = document.getElementById("main-color-picker");
             const cardPicker = document.getElementById("card-color-picker");
             const accentPicker = document.getElementById("accent-color-picker");
-        
+
             document.getElementById("save-colors-btn").addEventListener("click", () => {
                 const colors = {
                     main: mainPicker.value,
@@ -527,13 +341,28 @@
                 localStorage.setItem("lovelinkColors", JSON.stringify(colors));
                 applyColors(colors);
             });
-        
+
             function applyColors(colors) {
                 document.documentElement.style.setProperty('--main-color', colors.main);
                 document.documentElement.style.setProperty('--card-color', colors.card);
                 document.documentElement.style.setProperty('--accent-color', colors.accent);
+
+                // 🔥 同步 header 與底部顏色
+                document.documentElement.style.setProperty('--header-bg', colors.main);
+                document.documentElement.style.setProperty('--header-text', getTextColor(colors.main));
+                document.getElementById("bottom-menu").style.backgroundColor = colors.accent;
             }
-        
+
+            function getTextColor(bgColor) {
+                const c = bgColor.substring(1);
+                const rgb = parseInt(c, 16);
+                const r = (rgb >> 16) & 0xff;
+                const g = (rgb >> 8) & 0xff;
+                const b = rgb & 0xff;
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 180 ? "#000" : "#fff";
+            }
+
             function loadColors() {
                 const colors = JSON.parse(localStorage.getItem("lovelinkColors") || '{}');
                 if (colors.main) mainPicker.value = colors.main;
@@ -542,8 +371,6 @@
                 applyColors(colors);
             }
         });
-        </script>
-
+    </script>
 </body>
-
 </html>
