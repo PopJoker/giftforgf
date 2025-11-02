@@ -217,10 +217,49 @@
 
     <!-- 主頁 -->
     <div id="main-page" style="display:none; width:100%;">
-        <header>
-            妤慈公主奴才管理系統
-            <span id="points-display">剩餘點數: <strong id="girl-points">0</strong></span>
-        </header>
+        <header class="header">
+    <h1>妤慈公主奴才管理系統</h1>
+        <div class="points">
+            剩餘點數: <strong id="girl-points">0</strong>
+        </div>
+    </header>
+    
+    <style>
+    header.header {
+        display: flex;
+        flex-wrap: wrap; /* 手機時自動換行 */
+        justify-content: space-between; /* 左右分佈 */
+        align-items: center; /* 垂直置中 */
+        padding: 12px 16px;
+        background: rgba(44, 62, 80, 0.8); /* 玻璃質感深色背景 */
+        color: white;
+        font-size: 18px;
+        backdrop-filter: blur(8px); /* 模糊背景 */
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        gap: 8px; /* 標題與點數間距 */
+    }
+    
+    /* 文字樣式 */
+    header.header h1 {
+        font-size: 20px;
+        margin: 0;
+        font-weight: 600;
+    }
+    
+    header.header .points {
+        font-size: 16px;
+    }
+    
+    /* 手機模式：上下排列置中 */
+    @media (max-width: 480px) {
+        header.header {
+            flex-direction: column;
+            text-align: center;
+            gap: 4px;
+        }
+    }
+    </style>
         <main>
             <!-- 發布任務 -->
             <section id="publish-page">
